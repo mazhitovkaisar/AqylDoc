@@ -22,7 +22,7 @@ EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "intfloat/multilingual-e5-ba
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
 # --- Разбивка документов на фрагменты (в словах, с перекрытием) ---
 CHUNK_SIZE_WORDS = 220
