@@ -16,9 +16,18 @@ _client = None
 def get_client() -> anthropic.Anthropic:
     global _client
     if _client is None:
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        api_key = (os.environ.get("ANTHROPIC_API_KEY") or "").strip()
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY is not set. Add it to your .env file.")
+        if not api_key.isascii():
+            # Обычно значит, что при вставке ключа в Secrets/.env затесался
+            # невидимый символ (неразрывный пробел, смарт-кавычка и т.п.) —
+            # httpx падает с криптичным UnicodeEncodeError при сборке заголовка
+            raise RuntimeError(
+                "ANTHROPIC_API_KEY содержит недопустимые символы (похоже, при "
+                "копировании попал невидимый символ). Скопируйте ключ заново с "
+                "console.anthropic.com и вставьте как обычный текст."
+            )
         _client = anthropic.Anthropic(api_key=api_key)
     return _client
 
