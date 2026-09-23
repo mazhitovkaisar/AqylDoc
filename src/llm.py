@@ -1,10 +1,12 @@
 import logging
 import os
+import time
 from typing import Iterator
 
 import anthropic
 import ollama
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types as genai_types
 
 from src.config import CLAUDE_MODEL, GEMINI_MODEL, LLM_PROVIDER, OLLAMA_MODEL
@@ -58,14 +60,25 @@ def _stream_anthropic(system_prompt: str, user_message: str) -> Iterator[str]:
 
 def _stream_gemini(system_prompt: str, user_message: str) -> Iterator[str]:
     client = get_gemini_client()
-    response = client.models.generate_content_stream(
-        model=GEMINI_MODEL,
-        contents=user_message,
-        config=genai_types.GenerateContentConfig(system_instruction=system_prompt),
-    )
-    for chunk in response:
-        if chunk.text:
-            yield chunk.text
+    max_attempts = 3
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = client.models.generate_content_stream(
+                model=GEMINI_MODEL,
+                contents=user_message,
+                config=genai_types.GenerateContentConfig(system_instruction=system_prompt),
+            )
+            for chunk in response:
+                if chunk.text:
+                    yield chunk.text
+            return
+        except genai_errors.ServerError:
+            # Бесплатный тариф Gemini иногда отдаёт 503 (модель перегружена) —
+            # это временно, обычно проходит за секунды-минуты
+            if attempt == max_attempts:
+                raise
+            logger.warning(f"Gemini overloaded, retry {attempt}/{max_attempts}")
+            time.sleep(2 * attempt)
 
 
 def _stream_ollama(system_prompt: str, user_message: str) -> Iterator[str]:
