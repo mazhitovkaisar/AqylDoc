@@ -43,6 +43,17 @@ def query(embedding: np.ndarray, top_k: int) -> list[dict]:
     data = _load()
     if data["embeddings"] is None or not data["ids"]:
         return []
+    if data["embeddings"].shape[1] != len(embedding):
+        # Индекс был построен другой моделью эмбеддингов (другая размерность) —
+        # например, после смены EMBEDDING_MODEL. Старые векторы бесполезны,
+        # сбрасываем хранилище вместо падения; документы нужно будет загрузить заново.
+        logger.warning(
+            "Embedding dimension mismatch (store=%d, current=%d) — resetting vector store",
+            data["embeddings"].shape[1],
+            len(embedding),
+        )
+        _save({"ids": [], "texts": [], "metadatas": [], "embeddings": None})
+        return []
     scores = data["embeddings"] @ np.asarray(embedding, dtype=np.float32)
     top_idx = np.argsort(-scores)[:top_k]
     return [
