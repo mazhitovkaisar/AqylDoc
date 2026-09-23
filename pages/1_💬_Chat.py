@@ -37,13 +37,16 @@ if question:
         st.markdown(question)
 
     with st.chat_message("assistant"):
+        answer = ""
+        chunks = []
         try:
             # answer_question сама делает гибридный поиск и стримит ответ Claude;
             # write_stream печатает токены по мере поступления и возвращает полный текст
             token_stream, chunks = answer_question(question)
-            answer = st.write_stream(token_stream)
-        except RuntimeError as e:
-            # Сюда попадаем, если не задан ANTHROPIC_API_KEY
+            answer = st.write_stream(token_stream) or ""
+        except Exception as e:
+            # RuntimeError — нет ключа / Ollama не запущена; остальное — API, сеть, эмбеддинги
+            logger.exception("Chat answer failed")
             answer = f"⚠️ {e}"
             chunks = []
             st.error(answer)

@@ -20,18 +20,20 @@ def ingest_file(path: Path) -> int:
         logger.warning(f"No extractable text in {path.name}")
         return 0
 
-    # Повторная загрузка того же файла не должна дублировать чанки: старые
-    # фрагменты этого источника убираем до записи новых (иначе hybrid search
-    # получает одинаковые id несколько раз и забивает TOP_K дубликатами).
-    delete_document(path.name)
-
     # id строится из имени файла + номера чанка + хэша текста — стабилен между запусками
     ids = [
         f"{path.name}::{i}::{hashlib.md5(c.encode()).hexdigest()[:8]}"
         for i, c in enumerate(chunks)
     ]
     metadatas = [{"source": path.name, "chunk_index": i} for i in range(len(chunks))]
+    # Эмбеддинги считаем до удаления старых чанков: если модель/RAM падает,
+    # уже проиндексированный документ не пропадает.
     embeddings = embed_passages(chunks)
+
+    # Повторная загрузка того же файла не должна дублировать чанки: старые
+    # фрагменты этого источника убираем до записи новых (иначе hybrid search
+    # получает одинаковые id несколько раз и забивает TOP_K дубликатами).
+    delete_document(path.name)
 
     vectorstore.add_chunks(ids, chunks, embeddings, metadatas)
     bm25_index.add_chunks(ids, chunks)
