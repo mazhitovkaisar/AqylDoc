@@ -11,7 +11,7 @@ Upload Documents → loaders.py (PDF/DOCX/OCR) → chunking.py
 
 Chat → retrieval.py (гибридный поиск: RRF от вектора и BM25)
      → rag_chain.py (собирает контекст с источниками)
-     → llm.py (Claude API, потоковый ответ)
+     → llm.py (Claude API или Ollama — см. LLM_PROVIDER, потоковый ответ)
 ```
 
 ## Установка
@@ -22,7 +22,13 @@ Chat → retrieval.py (гибридный поиск: RRF от вектора и
    ```
 2. Tesseract OCR (для сканов/изображений) — установите бинарник и языковые пакеты `kaz` и `rus`:
    https://github.com/UB-Mannheim/tesseract/wiki (Windows-сборка с выбором языков при установке).
-3. Скопируйте `.env.example` в `.env` и впишите свой `ANTHROPIC_API_KEY`.
+3. Скопируйте `.env.example` в `.env` и настройте `LLM_PROVIDER`:
+   - `ollama` — бесплатно, локально. Установите [Ollama](https://ollama.com), выполните
+     `ollama pull qwen2.5:7b` (или другую модель — впишите её имя в `OLLAMA_MODEL`),
+     запустите приложение Ollama перед стартом AqylDoc.
+   - `anthropic` — платно, через API. Впишите `ANTHROPIC_API_KEY` с
+     https://console.anthropic.com. Единственный вариант для облачного деплоя —
+     Ollama на Streamlit Cloud не запустится.
 
 ## Запуск
 
