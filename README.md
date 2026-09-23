@@ -11,7 +11,7 @@ Upload Documents → loaders.py (PDF/DOCX/OCR) → chunking.py
 
 Chat → retrieval.py (гибридный поиск: RRF от вектора и BM25)
      → rag_chain.py (собирает контекст с источниками)
-     → llm.py (Claude API или Ollama — см. LLM_PROVIDER, потоковый ответ)
+     → llm.py (Claude API / Ollama / Gemini — см. LLM_PROVIDER, потоковый ответ)
 ```
 
 ## Установка
@@ -26,9 +26,10 @@ Chat → retrieval.py (гибридный поиск: RRF от вектора и
    - `ollama` — бесплатно, локально. Установите [Ollama](https://ollama.com), выполните
      `ollama pull qwen2.5:7b` (или другую модель — впишите её имя в `OLLAMA_MODEL`),
      запустите приложение Ollama перед стартом AqylDoc.
-   - `anthropic` — платно, через API. Впишите `ANTHROPIC_API_KEY` с
-     https://console.anthropic.com. Единственный вариант для облачного деплоя —
-     Ollama на Streamlit Cloud не запустится.
+   - `anthropic` — платно, лучшее качество на казахском/русском. Впишите
+     `ANTHROPIC_API_KEY` с https://console.anthropic.com (нужен баланс на счету).
+   - `gemini` — бесплатно и работает в облаке (в отличие от Ollama). Получите
+     `GEMINI_API_KEY` на https://aistudio.google.com/apikey — привязка карты не нужна.
 
 ## Запуск
 
@@ -42,10 +43,16 @@ streamlit run Welcome.py
 
 1. Зайти на https://share.streamlit.io, войти через GitHub, выбрать этот репозиторий,
    ветка `main`, главный файл `Welcome.py`.
-2. В Advanced settings → Secrets указать:
+2. В Advanced settings → Secrets указать (вариант с Claude, платно):
    ```
    ANTHROPIC_API_KEY = "..."
    CLAUDE_MODEL = "claude-sonnet-5"
+   EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
+   ```
+   или бесплатный вариант с Gemini:
+   ```
+   LLM_PROVIDER = "gemini"
+   GEMINI_API_KEY = "..."
    EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
    ```
    Модель эмбеддингов для облака взята меньше локальной (`e5-base` → `e5-small`),

@@ -15,12 +15,14 @@ for d in (DATA_DIR, UPLOADS_DIR, LOG_DIR):
 # --- Модели: эмбеддинги считаются локально; ответы генерирует LLM ---
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "intfloat/multilingual-e5-base")
 
-# LLM_PROVIDER переключает генерацию ответа: "anthropic" (Claude API, платно, нужен
-# интернет — подходит для облачного деплоя) или "ollama" (бесплатно, локально, но
-# не запустится на Streamlit Cloud — там негде держать фоновый процесс модели)
+# LLM_PROVIDER переключает генерацию ответа:
+# - "anthropic" — Claude API, платно, лучшее качество на казахском/русском
+# - "ollama"    — бесплатно, только локально (в облаке негде держать процесс модели)
+# - "gemini"    — Google Gemini, бесплатный тариф, работает и в облаке
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 # --- Разбивка документов на фрагменты (в словах, с перекрытием) ---
 CHUNK_SIZE_WORDS = 220
