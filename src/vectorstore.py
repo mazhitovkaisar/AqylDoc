@@ -7,16 +7,26 @@ from src.config import VECTOR_STORE_PATH
 
 logger = logging.getLogger(__name__)
 
+# Кэш в памяти процесса — без него каждый query()/add_chunks() перечитывал бы
+# и десериализовал pickle-файл с диска заново, что заметно на каждый вопрос в чате
+_cache: dict | None = None
+
 
 # Всё хранилище — один pickle-файл: список id, текстов, метаданных и матрица эмбеддингов
 def _load() -> dict:
-    if VECTOR_STORE_PATH.exists():
-        with open(VECTOR_STORE_PATH, "rb") as f:
-            return pickle.load(f)
-    return {"ids": [], "texts": [], "metadatas": [], "embeddings": None}
+    global _cache
+    if _cache is None:
+        if VECTOR_STORE_PATH.exists():
+            with open(VECTOR_STORE_PATH, "rb") as f:
+                _cache = pickle.load(f)
+        else:
+            _cache = {"ids": [], "texts": [], "metadatas": [], "embeddings": None}
+    return _cache
 
 
 def _save(data: dict) -> None:
+    global _cache
+    _cache = data
     with open(VECTOR_STORE_PATH, "wb") as f:
         pickle.dump(data, f)
 
