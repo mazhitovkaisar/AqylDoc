@@ -15,12 +15,18 @@ Context:
 """
 
 
+def format_source_label(metadata: dict) -> str:
+    source = metadata.get("source", "unknown")
+    page = metadata.get("page")
+    return f"{source}, стр. {page}" if page else source
+
+
 # Собирает найденные фрагменты в пронумерованный блок текста для системного промпта
 def build_context(chunks: list[dict]) -> str:
     parts = []
     for i, chunk in enumerate(chunks, start=1):
-        source = chunk["metadata"].get("source", "unknown")
-        parts.append(f"[{i}] (source: {source})\n{chunk['text']}")
+        label = format_source_label(chunk["metadata"])
+        parts.append(f"[{i}] (source: {label})\n{chunk['text']}")
     return "\n\n".join(parts)
 
 

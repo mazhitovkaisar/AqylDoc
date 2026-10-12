@@ -27,11 +27,11 @@ class IngestReplaceTest(unittest.TestCase):
                 from src import bm25_index, vectorstore
 
                 path = Path("report.pdf")
-                load_file.return_value = "old"
+                load_file.return_value = ["old"]
                 chunk_text.return_value = ["old chunk a", "old chunk b"]
                 self.assertEqual(ingest_file(path), 2)
 
-                load_file.return_value = "new"
+                load_file.return_value = ["new"]
                 chunk_text.return_value = ["new chunk only"]
                 self.assertEqual(ingest_file(path), 1)
 

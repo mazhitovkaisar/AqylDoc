@@ -12,10 +12,24 @@ logger = logging.getLogger(__name__)
 
 
 # Полный путь одного файла в индекс: текст -> чанки -> эмбеддинги -> запись
-# в оба индекса (вектор + BM25) с одинаковыми id, чтобы они не разъезжались
+# в оба индекса (вектор + BM25) с одинаковыми id, чтобы они не разъезжались.
+# Чанкуем постранично (а не весь файл одной строкой), чтобы у каждого чанка
+# была метка страницы — без этого источники цитировались бы только по имени файла.
 def ingest_file(path: Path) -> int:
-    text = load_file(path)
-    chunks = chunk_text(text, CHUNK_SIZE_WORDS, CHUNK_OVERLAP_WORDS)
+    pages = load_file(path)
+    multi_page = len(pages) > 1
+
+    chunks: list[str] = []
+    metadatas: list[dict] = []
+    for page_num, page_text in enumerate(pages, start=1):
+        page_chunks = chunk_text(page_text, CHUNK_SIZE_WORDS, CHUNK_OVERLAP_WORDS)
+        for chunk in page_chunks:
+            chunks.append(chunk)
+            meta = {"source": path.name, "chunk_index": len(metadatas)}
+            if multi_page:
+                meta["page"] = page_num
+            metadatas.append(meta)
+
     if not chunks:
         logger.warning(f"No extractable text in {path.name}")
         return 0
@@ -25,7 +39,6 @@ def ingest_file(path: Path) -> int:
         f"{path.name}::{i}::{hashlib.md5(c.encode()).hexdigest()[:8]}"
         for i, c in enumerate(chunks)
     ]
-    metadatas = [{"source": path.name, "chunk_index": i} for i in range(len(chunks))]
     # Эмбеддинги считаем до удаления старых чанков: если модель/RAM падает,
     # уже проиндексированный документ не пропадает.
     embeddings = embed_passages(chunks)

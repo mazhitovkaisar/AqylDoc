@@ -19,16 +19,18 @@ if _tesseract_cmd:
     pytesseract.pytesseract.tesseract_cmd = _tesseract_cmd
 
 
-# --- PDF: сначала пробуем текстовый слой, для страниц без текста запускаем OCR ---
-def load_pdf(path: Path) -> str:
+# --- PDF: сначала пробуем текстовый слой, для страниц без текста запускаем OCR.
+# Возвращает текст отдельно по страницам, чтобы источники можно было цитировать
+# с номером страницы, а не только именем файла.
+def load_pdf(path: Path) -> list[str]:
     reader = PdfReader(str(path))
-    parts = []
+    pages = []
     for page in reader.pages:
         text = page.extract_text() or ""
         if len(text.strip()) < 20:
             text += "\n" + _ocr_page_images(page)
-        parts.append(text)
-    return "\n".join(parts)
+        pages.append(text)
+    return pages
 
 
 # OCR по картинкам, вложенным в страницу PDF (типичный случай для сканов)
@@ -43,20 +45,22 @@ def _ocr_page_images(page) -> str:
     return text
 
 
-# --- DOCX: текст собирается из абзацев, пустые пропускаются ---
-def load_docx(path: Path) -> str:
+# --- DOCX: текст собирается из абзацев, пустые пропускаются. У DOCX нет
+# жёстких страниц, поэтому возвращаем один "псевдо-лист" целиком. ---
+def load_docx(path: Path) -> list[str]:
     document = docx.Document(str(path))
-    return "\n".join(p.text for p in document.paragraphs if p.text.strip())
+    text = "\n".join(p.text for p in document.paragraphs if p.text.strip())
+    return [text]
 
 
 # --- Отдельные изображения (PNG/JPG) распознаются через OCR целиком ---
-def load_image(path: Path) -> str:
+def load_image(path: Path) -> list[str]:
     image = Image.open(path)
-    return pytesseract.image_to_string(image, lang=OCR_LANGS)
+    return [pytesseract.image_to_string(image, lang=OCR_LANGS)]
 
 
 # Диспетчер: выбирает нужный загрузчик по расширению файла
-LOADERS: dict[str, Callable[[Path], str]] = {
+LOADERS: dict[str, Callable[[Path], list[str]]] = {
     ".pdf": load_pdf,
     ".docx": load_docx,
     ".png": load_image,
@@ -65,7 +69,7 @@ LOADERS: dict[str, Callable[[Path], str]] = {
 }
 
 
-def load_file(path: Path) -> str:
+def load_file(path: Path) -> list[str]:
     loader = LOADERS.get(path.suffix.lower())
     if loader is None:
         raise ValueError(f"Unsupported file type: {path.suffix}")

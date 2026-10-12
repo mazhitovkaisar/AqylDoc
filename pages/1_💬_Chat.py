@@ -3,7 +3,7 @@ import logging
 import streamlit as st
 from dotenv import load_dotenv
 
-from src.rag_chain import answer_question
+from src.rag_chain import answer_question, format_source_label
 from src.utils import setup_logging
 
 load_dotenv()
@@ -11,12 +11,18 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 st.set_page_config(page_title="AqylDoc — Chat", page_icon="💬")
-st.title("💬 Chat")
+
+title_col, clear_col = st.columns([5, 1])
+title_col.title("💬 Chat")
 
 # История чата хранится в session_state — Streamlit пересоздаёт скрипт при
 # каждом действии, без этого сообщения пропадали бы после каждого ответа
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+if clear_col.button("🗑️ Очистить"):
+    st.session_state.messages = []
+    st.rerun()
 
 # Перерисовываем всю прошлую историю сверху вниз при каждом rerun
 for message in st.session_state.messages:
@@ -25,7 +31,7 @@ for message in st.session_state.messages:
         if message.get("sources"):
             with st.expander("Источники"):
                 for i, chunk in enumerate(message["sources"], start=1):
-                    st.markdown(f"**[{i}] {chunk['metadata'].get('source')}**")
+                    st.markdown(f"**[{i}] {format_source_label(chunk['metadata'])}**")
                     st.caption(chunk["text"][:400])
 
 question = st.chat_input("Сұрағыңызды жазыңыз / Введите вопрос...")
@@ -55,7 +61,7 @@ if question:
         if chunks:
             with st.expander("Источники"):
                 for i, chunk in enumerate(chunks, start=1):
-                    st.markdown(f"**[{i}] {chunk['metadata'].get('source')}**")
+                    st.markdown(f"**[{i}] {format_source_label(chunk['metadata'])}**")
                     st.caption(chunk["text"][:400])
 
     st.session_state.messages.append(
