@@ -1,6 +1,12 @@
 # AqylDoc
 
+[![Tests](https://github.com/mazhitovkaisar/AqylDoc/actions/workflows/tests.yml/badge.svg)](https://github.com/mazhitovkaisar/AqylDoc/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](requirements.txt)
+
 Учебный RAG-проект: AI-ассистент по личным документам (PDF, DOCX, сканы) на казахском и русском.
+
+**Демо:** https://aqyldoc.streamlit.app
 
 ## Архитектура
 
